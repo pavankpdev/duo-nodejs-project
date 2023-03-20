@@ -9,6 +9,10 @@ const UserModel = require('./models/User')
 const RegisterPayloadValidation = require('./validation/registerIUser')
 const LoginPayloadValidation = require('./validation/loginUser')
 
+// UTILS
+const hashPwd = require('./utils/hashPwd')
+const compareHash = require('./utils/compareHash')
+
 mongoose.connect('mongodb+srv://duo:duo@duodb.q7jwimg.mongodb.net/?retryWrites=true&w=majority')
 
 app.use(express.json())
@@ -36,7 +40,9 @@ app.post('/auth/register',
             return res.status(400).json({error: `Phone number already exist`})
         }
 
-        const user = new UserModel(payload)
+        const hashedPassword = await hashPwd(payload.password);
+
+        const user = new UserModel({...payload, password: hashedPassword})
 
         await user.save()
         res.status(201).json({
@@ -71,9 +77,16 @@ app.post('/auth/login', async (req, res) => {
             })
         }
 
+        const comparePassword = await compareHash(payload.password, user.password)
+        if(!comparePassword) {
+            return res.status(400).json({
+                error: `Invalid password`
+            })
+        }
+
         res.status(201).json({
             data: user,
-            status: "Success"
+            status: "Success",
         })
     } catch (error) {
         console.log(error)
