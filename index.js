@@ -1,6 +1,7 @@
 const app = require('express')();
 const mongoose = require('mongoose');
 const express = require('express');
+const swaggerUi = require('swagger-ui-express');
 
 // MODELS
 const UserModel = require('./models/User')
@@ -12,10 +13,18 @@ const LoginPayloadValidation = require('./validation/loginUser')
 // UTILS
 const hashPwd = require('./utils/hashPwd')
 const compareHash = require('./utils/compareHash')
+const swaggerDocument = require('./swagger.json');
+
 
 mongoose.connect('mongodb+srv://duo:duo@duodb.q7jwimg.mongodb.net/?retryWrites=true&w=majority')
 
 app.use(express.json())
+
+app.use(
+    '/api-docs',
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerDocument)
+);
 
 app.post('/auth/register',
     async (req, res) =>   {
